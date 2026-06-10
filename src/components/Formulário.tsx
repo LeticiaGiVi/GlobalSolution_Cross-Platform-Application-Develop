@@ -1,218 +1,230 @@
-// components/Formulário.tsx
-// Formulário de reconfiguração de telemetria.
-// Valida os campos, chama updateMissionData() do Context e navega de volta ao Dashboard.
 
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  StyleSheet,
-  ScrollView,
+  View, Text, StyleSheet, FlatList,
+  TouchableOpacity, SafeAreaView, StatusBar,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useMission } from "../services/ContextoMissao";
-import { MissionData } from "../interfaces/missionData";
+import { Alerts } from "../components/AlertCompo";
+import GalaxyBg from "../components/back";
+import { C, R, S, MONO } from "../styles/app.styles";
 
-const ESTADOS_VALIDOS: MissionData["orbitStatus"][] = ["Estável", "Instável", "Offline"];
+interface AlertaItem {
+  id: string;
+  sistema: string;
+  mensagem: string;
+  timestamp: string;
+  nivel: "critico" | "aviso" | "estavel";
+}
 
-export default function Formulario() {
-  const { missionData, updateMissionData } = useMission();
-  const router = useRouter();
+const ALERTAS_MOCK: AlertaItem[] = [
+  { id:"1", sistema:"Propulsão",    mensagem:"Temperatura do motor principal acima de 1200°C.", timestamp:"T+ 02:45:12", nivel:"critico" },
+  { id:"2", sistema:"Energia",      mensagem:"Painéis solares com 15% menos captação (poeira cósmica).", timestamp:"T+ 02:40:05", nivel:"aviso" },
+  { id:"3", sistema:"Suporte de Vida", mensagem:"Níveis de oxigênio estáveis em 21%.", timestamp:"T+ 02:35:50", nivel:"estavel" },
+  { id:"4", sistema:"Escudo",        mensagem:"Flutuação de 3% na integridade do escudo — setor primário.", timestamp:"T+ 02:12:18", nivel:"aviso" },
+  { id:"5", sistema:"Reentrada",     mensagem:"Sensores de pressão externa calibrados e nominais.", timestamp:"T+ 01:55:00", nivel:"estavel" },
+];
 
-  // Inicializa os campos com os valores atuais do Context
-  const [energia, setEnergia] = useState(missionData.energy.toString());
-  const [temperatura, setTemperatura] = useState(missionData.temperature.toString());
-  const [pressao, setPressao] = useState(missionData.pressure.toString());
-  const [umidade, setUmidade] = useState(missionData.humidity.toString());
-  
-  // Corrigido: Tipado explicitamente como string para aceitar a digitação do TextInput
-  const [comunicacao, setComunicacao] = useState<string>(missionData.orbitStatus);
+const NIVEL_COLOR: Record<string, string> = {
+  critico: C.danger,
+  aviso:   C.amber,
+  estavel: C.success,
+};
 
-  async function validarETransmitir() {
-    // 1. Campos vazios
-    if (
-      energia.trim() === "" ||
-      temperatura.trim() === "" ||
-      pressao.trim() === "" ||
-      umidade.trim() === "" ||
-      comunicacao.trim() === ""
-    ) {
-      Alert.alert(" ERRO DE TRANSMISSÃO", "Preencha todos os campos de telemetria.");
-      return;
-    }
+const NIVEL_BG: Record<string, string> = {
+  critico: C.dangerGlow,
+  aviso:   "rgba(245,166,35,0.14)",
+  estavel: "rgba(0,229,160,0.12)",
+};
 
-    const energiaNum = Number(energia);
-    const temperaturaNum = Number(temperatura);
-    const pressaoNum = Number(pressao);
-    const umidadeNum = Number(umidade);
+type Filtro = "todos" | "critico" | "aviso";
 
-    // 2. Validações de limites
-    if (isNaN(energiaNum) || energiaNum < 0 || energiaNum > 100) {
-      Alert.alert("FALHA NO SISTEMA", "A Energia deve estar entre 0% e 100%.");
-      return;
-    }
+export default function Alertas() {
+  const [filtro, setFiltro] = useState<Filtro>("todos");
 
-    if (isNaN(temperaturaNum) || temperaturaNum < -150 || temperaturaNum > 150) {
-      Alert.alert(
-        " ANOMALIA TÉRMICA",
-        "Temperatura inválida para os limites da nave (-150°C a 150°C)."
-      );
-      return;
-    }
+  const lista = ALERTAS_MOCK.filter(a =>
+    filtro === "todos" ? true : a.nivel === filtro
+  );
 
-    if (isNaN(pressaoNum) || pressaoNum <= 0) {
-      Alert.alert(
-        " PRESSÃO CRÍTICA",
-        "A pressão atmosférica interna deve ser maior que 0 kPa."
-      );
-      return;
-    }
-
-    if (isNaN(umidadeNum) || umidadeNum < 0 || umidadeNum > 100) {
-      Alert.alert(" SUPORTE DE VIDA", "A Umidade deve estar entre 0% e 100%.");
-      return;
-    }
-
-    // Normaliza o status: primeira letra maiúscula, resto minúsculo
-    const comunicacaoFormatada = (
-      comunicacao.trim().charAt(0).toUpperCase() +
-      comunicacao.trim().slice(1).toLowerCase()
-    ) as MissionData["orbitStatus"];
-
-    if (!ESTADOS_VALIDOS.includes(comunicacaoFormatada)) {
-      Alert.alert(
-        "LINK DE COMUNICAÇÃO",
-        "O estado deve ser exatamente: Estável, Instável ou Offline"
-      );
-      return;
-    }
-
-    // 3. Envia os dados validados para o Context + AsyncStorage
-    await updateMissionData({
-      energy: energiaNum,
-      temperature: temperaturaNum,
-      pressure: pressaoNum,
-      humidity: umidadeNum,
-      orbitStatus: comunicacaoFormatada,
-    });
-
-    Alert.alert(" SUCESSO", "Novos parâmetros transmitidos à central com sucesso!");
-    router.push("/");
-  }
+  const renderItem = ({ item }: { item: AlertaItem }) => (
+    <View style={[styles.card, { borderLeftColor: NIVEL_COLOR[item.nivel] }]}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.sistemaText}>{item.sistema.toUpperCase()}</Text>
+        <Text style={styles.timestamp}>{item.timestamp}</Text>
+      </View>
+      <Text style={styles.mensagem}>{item.mensagem}</Text>
+      <View style={[styles.badge, { backgroundColor: NIVEL_BG[item.nivel], borderColor: NIVEL_COLOR[item.nivel] + "50" }]}>
+        <Text style={[styles.badgeText, { color: NIVEL_COLOR[item.nivel] }]}>
+          {item.nivel.toUpperCase()}
+        </Text>
+      </View>
+    </View>
+  );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={styles.title}>RECONFIGURAR PARÂMETROS</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" />
+      <GalaxyBg />
 
-      <Text style={styles.label}>NÍVEL DE ENERGIA (%)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ex: 85"
-        placeholderTextColor="#4A5568"
-        keyboardType="numeric"
-        value={energia}
-        onChangeText={setEnergia}
+
+      <View style={styles.header}>
+        <Text style={styles.eyebrow}>MISSÃO ESPACIAL</Text>
+        <Text style={styles.title}>Painel de Alertas</Text>
+        <Text style={styles.subtitle}>Status atualizado em tempo real</Text>
+      </View>
+
+
+      <View style={{ paddingHorizontal: S.md }}>
+        <Alerts />
+      </View>
+
+      <View style={styles.filterRow}>
+        {([
+          { key: "todos",   label: "Todos"    },
+          { key: "critico", label: "Críticos" },
+          { key: "aviso",   label: "Avisos"   },
+        ] as { key: Filtro; label: string }[]).map(({ key, label }) => (
+          <TouchableOpacity
+            key={key}
+            style={[
+              styles.filterBtn,
+              filtro === key && { backgroundColor: NIVEL_COLOR[key] ?? C.cyan, borderColor: "transparent" },
+            ]}
+            onPress={() => setFiltro(key)}
+            activeOpacity={0.75}
+          >
+            <Text style={[
+              styles.filterText,
+              filtro === key && { color: key === "todos" ? C.nebula : "#fff" },
+            ]}>
+              {label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+
+      <FlatList
+        data={lista}
+        keyExtractor={i => i.id}
+        renderItem={renderItem}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={
+          <Text style={styles.empty}>Nenhum alerta para este filtro.</Text>
+        }
       />
-
-      <Text style={styles.label}>TEMPERATURA INTERNA (°C)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ex: 22"
-        placeholderTextColor="#4A5568"
-        keyboardType="numeric"
-        value={temperatura}
-        onChangeText={setTemperatura}
-      />
-
-      <Text style={styles.label}>PRESSÃO DA CABINE (kPa)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ex: 101"
-        placeholderTextColor="#4A5568"
-        keyboardType="numeric"
-        value={pressao}
-        onChangeText={setPressao}
-      />
-
-      <Text style={styles.label}>UMIDADE DO AR (%)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ex: 45"
-        placeholderTextColor="#4A5568"
-        keyboardType="numeric"
-        value={umidade}
-        onChangeText={setUmidade}
-      />
-
-      <Text style={styles.label}>LINK DE COMUNICAÇÃO (Estável | Instável | Offline)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Estável, Instável ou Offline"
-        placeholderTextColor="#4A5568"
-        value={comunicacao}
-        onChangeText={setComunicacao}
-        autoCorrect={false}
-        autoCapitalize="words"
-      />
-
-      <TouchableOpacity style={styles.button} onPress={validarETransmitir}>
-        <Text style={styles.buttonText}>TRANSMITIR NOVOS DADOS</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#000000",
-    padding: 20,
+    backgroundColor: C.nebula,
+  },
+
+  header: {
+    paddingHorizontal: S.md,
+    paddingTop: S.xxl + S.lg,
+    marginBottom: S.md,
+  },
+  eyebrow: {
+    color: C.moonDust,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1.6,
+    marginBottom: S.xs,
+    ...MONO,
   },
   title: {
-    color: "#43cb43",
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 25,
-    textAlign: "center",
-    letterSpacing: 1.5,
+    color: C.starlight,
+    fontSize: 26,
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
-  label: {
-    color: "#23b35a",
+  subtitle: {
+    color: C.moonDust,
+    fontSize: 13,
+    marginTop: 4,
+  },
+
+  filterRow: {
+    flexDirection: "row",
+    paddingHorizontal: S.md,
+    marginBottom: S.md,
+    gap: S.sm,
+  },
+  filterBtn: {
+    paddingVertical: 7,
+    paddingHorizontal: 16,
+    borderRadius: R.pill,
+    backgroundColor: C.cosmos,
+    borderWidth: 0.5,
+    borderColor: C.borderMid,
+  },
+  filterText: {
+    color: C.moonDust,
     fontSize: 12,
     fontWeight: "600",
-    marginBottom: 6,
-    marginTop: 10,
+    letterSpacing: 0.4,
+  },
+
+  list: {
+    paddingHorizontal: S.md,
+    paddingBottom: S.xxl,
+  },
+
+  card: {
+    backgroundColor: C.darkMatter,
+    borderRadius: R.md,
+    borderWidth: 0.5,
+    borderColor: C.borderSubtle,
+    borderLeftWidth: 3,
+    padding: S.md,
+    marginBottom: S.sm,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: S.sm,
+  },
+  sistemaText: {
+    color: C.starlight,
+    fontSize: 11,
+    fontWeight: "700",
     letterSpacing: 1,
+    ...MONO,
   },
-  input: {
-    backgroundColor: "#000000",
-    borderColor: "#48d419",
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 14,
-    marginBottom: 12,
-    color: "#FFF",
-    fontSize: 15,
-    fontFamily: "monospace",
+  timestamp: {
+    color: C.stardust,
+    fontSize: 10,
+    ...MONO,
   },
-  button: {
-    backgroundColor: "#40ad2d",
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 20,
-    shadowColor: "#00ff049d",
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+  mensagem: {
+    color: C.moonDust,
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: S.sm,
   },
-  buttonText: {
-    color: "#020408",
+  badge: {
+    alignSelf: "flex-start",
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: R.sm,
+    borderWidth: 0.5,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+    ...MONO,
+  },
+
+  empty: {
+    color: C.stardust,
     textAlign: "center",
-    fontWeight: "bold",
-    fontSize: 15,
-    letterSpacing: 1,
+    marginTop: S.xxl,
+    fontSize: 14,
+    ...MONO,
   },
 });

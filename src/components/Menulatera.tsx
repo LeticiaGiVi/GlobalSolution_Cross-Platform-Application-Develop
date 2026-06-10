@@ -1,39 +1,39 @@
-// components/MenuLateral.tsx
-// Header de navegação horizontal.
-// Navega entre as telas: Home (Dashboard), Formulário (Config) e Alertas.
+
 
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { C, R, S, MONO } from "../styles/app.styles";
+
+const NAV_ITEMS = [
+  { label: "Dashboard", screen: "Home"    },
+  { label: "Telemetria",  screen: "Config"  },
+  { label: "Alertas",   screen: "Alertas" },
+];
 
 export default function MenuLateral() {
   const navigation = useNavigation<any>();
 
   return (
     <View style={styles.header}>
-      <Text style={styles.logo}>Terminal Espacial...</Text>
 
-      <View style={styles.menu}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate("Home")}
-        >
-          <Text style={styles.buttonText}>Informações</Text>
-        </TouchableOpacity>
+      <View style={styles.logoBlock}>
+        <View style={styles.logoDot} />
+        <Text style={styles.logo}>TERMINAL<Text style={styles.logoAccent}> //</Text></Text>
+      </View>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate("Config")}
-        >
-          <Text style={styles.buttonText}>Dados</Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate("Alertas")}
-        >
-          <Text style={styles.buttonText}>Notificações</Text>
-        </TouchableOpacity>
+      <View style={styles.nav}>
+        {NAV_ITEMS.map(({ label, screen }) => (
+          <TouchableOpacity
+            key={screen}
+            style={styles.navBtn}
+            onPress={() => navigation.navigate(screen)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.navText}>{label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   );
@@ -41,32 +41,56 @@ export default function MenuLateral() {
 
 const styles = StyleSheet.create({
   header: {
-    height: 80,
-    paddingTop: 30,
-    paddingHorizontal: 16,
-    backgroundColor: "#0B0E14",
-    borderBottomWidth: 1,
-    borderBottomColor: "#1ec90f",
+    height: 64,
+    paddingHorizontal: S.md,
+    backgroundColor: C.deep,
+    borderBottomWidth: 0.5,
+    borderBottomColor: C.cyanBorder,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  logo: {
-    color: "#3cd029",
-    fontSize: 18,
-    fontWeight: "bold",
-    fontFamily: "monospace",
-    letterSpacing: 1,
+
+  logoBlock: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: S.xs,
   },
-  menu: { flexDirection: "row" },
-  button: {
-    marginLeft: 10,
+  logoDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: C.cyan,
+  },
+  logo: {
+    color: C.starlight,
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 2,
+    ...MONO,
+  },
+  logoAccent: {
+    color: C.cyan,
+  },
+
+  nav: {
+    flexDirection: "row",
+    gap: S.xs,
+  },
+
+  navBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "#000000",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#1ec90f",
+    borderRadius: R.sm,
+    backgroundColor: C.cosmos,
+    borderWidth: 0.5,
+    borderColor: C.borderMid,
   },
-  buttonText: { color: "#2cac32", fontSize: 13 },
+
+  navText: {
+    color: C.moonDust,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
 });

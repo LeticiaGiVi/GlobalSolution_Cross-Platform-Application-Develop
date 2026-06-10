@@ -1,85 +1,137 @@
-// components/cardfelicidade.tsx
-// Exibe o status geral da missão (orbitStatus) no estilo de um gauge.
-// Recebe `orbitStatus` como prop vindo do Home.tsx (que lê do Context).
+
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { MissionData } from "../interfaces/missionData";
+import { C, R, S, MONO } from "../styles/app.styles";
 
 interface CardFelicidadeProps {
   orbitStatus: MissionData["orbitStatus"];
 }
 
 const STATUS_CONFIG = {
-  Estável: { cor: "#22C55E", score: "100%", label: "Missão estável" },
-  Instável: { cor: "#F59E0B", score: "55%", label: "Atenção necessária" },
-  Offline: { cor: "#EF4444", score: "0%", label: "Comunicação perdida" },
+  Estável:  { cor: C.success,  score: "100%", label: "Todos os sistemas nominais",  glow: "rgba(0,229,160,0.18)"  },
+  Instável: { cor: C.amber,    score: "55%",  label: "Monitoramento necessário",    glow: "rgba(245,166,35,0.18)" },
+  Offline:  { cor: C.danger,   score: "0%",   label: "Comunicação perdida",         glow: "rgba(255,77,106,0.18)" },
 };
 
 export default function CardFelicidade({ orbitStatus }: CardFelicidadeProps) {
-  const config = STATUS_CONFIG[orbitStatus] ?? STATUS_CONFIG["Estável"];
+  const cfg = STATUS_CONFIG[orbitStatus] ?? STATUS_CONFIG["Estável"];
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Status da Missão</Text>
 
-      <View style={[styles.gauge, { borderColor: config.cor }]}>
-        <Text style={[styles.score, { color: config.cor }]}>{config.score}</Text>
-        <Text style={styles.label}>{config.label}</Text>
+      <View style={styles.header}>
+        <Text style={styles.eyebrow}>STATUS DA MISSÃO</Text>
+        <View style={[styles.pill, { backgroundColor: cfg.glow, borderColor: cfg.cor + "60" }]}>
+          <Text style={[styles.pillText, { color: cfg.cor }]}>
+            {orbitStatus.toUpperCase()}
+          </Text>
+        </View>
       </View>
 
-      <Text style={[styles.badge, { color: config.cor }]}>
-        {orbitStatus.toUpperCase()}
-      </Text>
+
+      <View style={[styles.gauge, { borderColor: cfg.cor, shadowColor: cfg.cor }]}>
+        <Text style={[styles.score, { color: cfg.cor }]}>{cfg.score}</Text>
+        <Text style={styles.gaugeLabel}>{cfg.label}</Text>
+      </View>
+
+  
+      <View style={styles.metaRow}>
+        <Text style={styles.metaItem}>▲ VELOCIDADE  <Text style={styles.metaValue}>7.9 km/s</Text></Text>
+        <Text style={styles.metaItem}>◉ ÓRBITA  <Text style={styles.metaValue}>392 km</Text></Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#000000",
-    borderRadius: 20,
-    padding: 20,
-    marginVertical: 10,
-    borderWidth: 1,
-    borderColor: "#000000",
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
+    backgroundColor: C.darkMatter,
+    borderRadius: R.lg,
+    borderWidth: 0.5,
+    borderColor: C.borderSubtle,
+    borderTopWidth: 1,
+    borderTopColor: C.violetGlow.replace("0.18", "0.6"),
+    padding: S.lg,
+    marginVertical: S.sm,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFF",
-    marginBottom: 20,
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: S.lg,
   },
+
+  eyebrow: {
+    color: C.moonDust,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.4,
+    ...MONO,
+  },
+
+  pill: {
+    borderRadius: R.pill,
+    borderWidth: 0.5,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  pillText: {
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+    ...MONO,
+  },
+
   gauge: {
-    height: 140,
+    height: 120,
     justifyContent: "center",
     alignItems: "center",
-    borderTopLeftRadius: 120,
-    borderTopRightRadius: 120,
-    borderWidth: 16,
+    borderTopLeftRadius: 100,
+    borderTopRightRadius: 100,
+    borderWidth: 10,
     borderBottomWidth: 0,
-    backgroundColor: "#000000",
-    marginBottom: 16,
+    backgroundColor: "transparent",
+    marginBottom: S.lg,
+
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 0,
   },
+
   score: {
-    fontSize: 38,
-    fontWeight: "bold",
-    fontFamily: "monospace",
+    fontSize: 36,
+    fontWeight: "700",
+    ...MONO,
   },
-  label: {
-    fontSize: 13,
-    color: "#94A3B8",
+
+  gaugeLabel: {
+    fontSize: 11,
+    color: C.moonDust,
     marginTop: 4,
+    letterSpacing: 0.3,
   },
-  badge: {
-    textAlign: "center",
-    fontWeight: "bold",
-    fontSize: 13,
-    letterSpacing: 2,
-    fontFamily: "monospace",
+
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    borderTopWidth: 0.5,
+    borderTopColor: C.borderSubtle,
+    paddingTop: S.sm,
+  },
+
+  metaItem: {
+    fontSize: 9,
+    color: C.stardust,
+    letterSpacing: 0.8,
+    ...MONO,
+  },
+
+  metaValue: {
+    color: C.cyan,
+    fontWeight: "700",
   },
 });

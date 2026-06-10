@@ -1,47 +1,41 @@
-// components/AlertCompo.tsx
-// Exibe alertas em tempo real com base nos dados do Context.
-// Os campos monitorados são os mesmos de MissionData: energy, temperature, pressure, humidity.
+
 
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useMission } from "../services/ContextoMissao";
+import { C, R, S, MONO } from "../styles/app.styles";
 
 export function Alerts() {
   const { missionData } = useMission();
   const [alerts, setAlerts] = useState<string[]>([]);
 
   useEffect(() => {
-    const novosAlertas: string[] = [];
-
+    const novos: string[] = [];
     if (missionData.energy < 30)
-      novosAlertas.push("Energia crítica! Nível abaixo de 30%");
-
+      novos.push("⚡  Energia crítica — nível abaixo de 30%");
     if (missionData.temperature > 50 || missionData.temperature < 5)
-      novosAlertas.push("Temperatura fora dos limites operacionais!");
-
+      novos.push("🌡  Temperatura fora dos limites operacionais");
     if (missionData.pressure < 90)
-      novosAlertas.push("Pressão da cabine abaixo do mínimo seguro!");
-
+      novos.push("⬇  Pressão da cabine abaixo do mínimo seguro");
     if (missionData.humidity > 80 || missionData.humidity < 20)
-      novosAlertas.push("Umidade fora da faixa de conforto!");
-
+      novos.push("💧  Umidade fora da faixa de conforto");
     if (missionData.orbitStatus === "Offline")
-      novosAlertas.push("Link de comunicação OFFLINE!");
-
+      novos.push("📡  Link de comunicação OFFLINE");
     if (missionData.orbitStatus === "Instável")
-      novosAlertas.push("Instabilidade orbital detectada!");
-
-    setAlerts(novosAlertas);
+      novos.push("⚠  Instabilidade orbital detectada");
+    setAlerts(novos);
   }, [missionData]);
 
   if (alerts.length === 0) return null;
 
   return (
     <View style={styles.container}>
+      <Text style={styles.header}>▲ ALERTAS ATIVOS [{alerts.length}]</Text>
       {alerts.map((alerta, i) => (
-        <Text key={i} style={styles.alertText}>
-          {alerta}
-        </Text>
+        <View key={i} style={styles.alertRow}>
+          <View style={styles.dot} />
+          <Text style={styles.alertText}>{alerta}</Text>
+        </View>
       ))}
     </View>
   );
@@ -49,17 +43,45 @@ export function Alerts() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#1A0B0B",
-    borderRadius: 8,
-    padding: 12,
-    marginVertical: 8,
-    borderWidth: 1,
-    borderColor: "#EF4444",
+    backgroundColor: "#0F0610",
+    borderRadius: R.lg,
+    borderWidth: 0.5,
+    borderColor: "rgba(255,77,106,0.45)",
+    borderLeftWidth: 2,
+    borderLeftColor: C.danger,
+    padding: S.md,
+    marginVertical: S.sm,
   },
+
+  header: {
+    color: C.danger,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1.4,
+    marginBottom: S.sm,
+    ...MONO,
+  },
+
+  alertRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: S.xs,
+  },
+
+  dot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: C.danger,
+    marginRight: S.sm,
+    opacity: 0.8,
+  },
+
   alertText: {
-    color: "#FCA5A5",
-    fontFamily: "monospace",
-    fontSize: 13,
-    marginBottom: 4,
+    color: "#FFB3BE",
+    fontSize: 12,
+    flex: 1,
+    lineHeight: 18,
+    ...MONO,
   },
 });

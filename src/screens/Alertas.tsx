@@ -1,15 +1,13 @@
+
+
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
+  View, Text, StyleSheet, FlatList,
+  TouchableOpacity, SafeAreaView, StatusBar,
 } from "react-native";
-
 import { Alerts } from "../components/AlertCompo";
+import GalaxyBg from "../components/back";
+import { C, R, S, MONO } from "../styles/app.styles";
 
 interface AlertaItem {
   id: string;
@@ -20,73 +18,43 @@ interface AlertaItem {
 }
 
 const ALERTAS_MOCK: AlertaItem[] = [
-  {
-    id: "1",
-    sistema: "🚀 Propulsão",
-    mensagem: "Temperatura do motor principal acima de 1200°C. Risco de superaquecimento.",
-    timestamp: "T+ 02:45:12",
-    nivel: "critico",
-  },
-  {
-    id: "2",
-    sistema: "🔋 Energia",
-    mensagem: "Painéis solares com 15% a menos de captação devido à poeira cósmica.",
-    timestamp: "T+ 02:40:05",
-    nivel: "aviso",
-  },
-  {
-    id: "3",
-    sistema: "💨 Suporte de Vida",
-    mensagem: "Níveis de oxigênio na cabine principal estáveis em 21%.",
-    timestamp: "T+ 02:35:50",
-    nivel: "estavel",
-  },
-  {
-    id: "4",
-    sistema: "🛡️ Escudo Defletor",
-    mensagem: "Flutuação de 3% na integridade do escudo no setor primário.",
-    timestamp: "T+ 02:12:18",
-    nivel: "aviso",
-  },
-  {
-    id: "5",
-    sistema: "🔥 Reentrada",
-    mensagem: "Sensores de pressão externa calibrados e operando normalmente.",
-    timestamp: "T+ 01:55:00",
-    nivel: "estavel",
-  },
+  { id:"1", sistema:"Propulsão",    mensagem:"Temperatura do motor principal acima de 1200°C.", timestamp:"T+ 02:45:12", nivel:"critico" },
+  { id:"2", sistema:"Energia",      mensagem:"Painéis solares com 15% menos captação (poeira cósmica).", timestamp:"T+ 02:40:05", nivel:"aviso" },
+  { id:"3", sistema:"Suporte de Vida", mensagem:"Níveis de oxigênio estáveis em 21%.", timestamp:"T+ 02:35:50", nivel:"estavel" },
+  { id:"4", sistema:"Escudo",        mensagem:"Flutuação de 3% na integridade do escudo — setor primário.", timestamp:"T+ 02:12:18", nivel:"aviso" },
+  { id:"5", sistema:"Reentrada",     mensagem:"Sensores de pressão externa calibrados e nominais.", timestamp:"T+ 01:55:00", nivel:"estavel" },
 ];
 
+const NIVEL_COLOR: Record<string, string> = {
+  critico: C.danger,
+  aviso:   C.amber,
+  estavel: C.success,
+};
+
+const NIVEL_BG: Record<string, string> = {
+  critico: C.dangerGlow,
+  aviso:   "rgba(245,166,35,0.14)",
+  estavel: "rgba(0,229,160,0.12)",
+};
+
+type Filtro = "todos" | "critico" | "aviso";
+
 export default function Alertas() {
-  const [filtro, setFiltro] = useState<"todos" | "critico" | "aviso">("todos");
+  const [filtro, setFiltro] = useState<Filtro>("todos");
 
-  // Filtra a lista de alertas com base no botão selecionado
-  const alertasFiltrados = ALERTAS_MOCK.filter((alerta) => {
-    if (filtro === "todos") return true;
-    return alerta.nivel === filtro;
-  });
-
-  // Função para estilizar a borda esquerda com base na gravidade
-  const getCorNivel = (nivel: string) => {
-    switch (nivel) {
-      case "critico":
-        return "#EF4444"; // Vermelho
-      case "aviso":
-        return "#F59E0B"; // Amarelo/Laranja
-      default:
-        return "#10B981"; // Verde
-    }
-  };
+  const lista = ALERTAS_MOCK.filter(a =>
+    filtro === "todos" ? true : a.nivel === filtro
+  );
 
   const renderItem = ({ item }: { item: AlertaItem }) => (
-    <View style={[styles.card, { borderLeftColor: getCorNivel(item.nivel) }]}>
+    <View style={[styles.card, { borderLeftColor: NIVEL_COLOR[item.nivel] }]}>
       <View style={styles.cardHeader}>
-        <Text style={styles.sistemaText}>{item.sistema}</Text>
-        <Text style={styles.timestampText}>{item.timestamp}</Text>
+        <Text style={styles.sistemaText}>{item.sistema.toUpperCase()}</Text>
+        <Text style={styles.timestamp}>{item.timestamp}</Text>
       </View>
-      <Text style={styles.mensagemText}>{item.mensagem}</Text>
-      <View style={[styles.badge, { backgroundColor: getCorNivel(item.nivel) + "20" }]}>
-        <Text style={[styles.badgeText, { color: getCorNivel(item.nivel) }]}>
+      <Text style={styles.mensagem}>{item.mensagem}</Text>
+      <View style={[styles.badge, { backgroundColor: NIVEL_BG[item.nivel], borderColor: NIVEL_COLOR[item.nivel] + "50" }]}>
+        <Text style={[styles.badgeText, { color: NIVEL_COLOR[item.nivel] }]}>
           {item.nivel.toUpperCase()}
         </Text>
       </View>
@@ -94,47 +62,53 @@ export default function Alertas() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
-      
-      {/* Título da Página com margem interna para não bater no botão hamburguer do menu */}
+      <GalaxyBg />
+
       <View style={styles.header}>
+        <Text style={styles.eyebrow}>MISSÃO ESPACIAL</Text>
         <Text style={styles.title}>Painel de Alertas</Text>
-        <Text style={styles.subtitle}>Status atualizado da Missão Espacial</Text>
+        <Text style={styles.subtitle}>Status atualizado em tempo real</Text>
       </View>
 
-      {/* Botões de Filtro */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[styles.filterButton, filtro === "todos" && styles.filterActive]}
-          onPress={() => setFiltro("todos")}
-        >
-          <Text style={styles.filterText}>Todos</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.filterButton, filtro === "critico" && styles.filterActiveCritico]}
-          onPress={() => setFiltro("critico")}
-        >
-          <Text style={styles.filterText}>⚠️ Críticos</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.filterButton, filtro === "aviso" && styles.filterActiveAviso]}
-          onPress={() => setFiltro("aviso")}
-        >
-          <Text style={styles.filterText}>🔔 Avisos</Text>
-        </TouchableOpacity>
+      <View style={{ paddingHorizontal: S.md }}>
+        <Alerts />
       </View>
 
-      {/* Lista de Alertas */}
+      <View style={styles.filterRow}>
+        {([
+          { key: "todos",   label: "Todos"    },
+          { key: "critico", label: "Críticos" },
+          { key: "aviso",   label: "Avisos"   },
+        ] as { key: Filtro; label: string }[]).map(({ key, label }) => (
+          <TouchableOpacity
+            key={key}
+            style={[
+              styles.filterBtn,
+              filtro === key && { backgroundColor: NIVEL_COLOR[key] ?? C.cyan, borderColor: "transparent" },
+            ]}
+            onPress={() => setFiltro(key)}
+            activeOpacity={0.75}
+          >
+            <Text style={[
+              styles.filterText,
+              filtro === key && { color: key === "todos" ? C.nebula : "#fff" },
+            ]}>
+              {label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+
       <FlatList
-        data={alertasFiltrados}
-        keyExtractor={(item) => item.id}
+        data={lista}
+        keyExtractor={i => i.id}
         renderItem={renderItem}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Nenhum alerta encontrado para este filtro.</Text>
+          <Text style={styles.empty}>Nenhum alerta para este filtro.</Text>
         }
       />
     </SafeAreaView>
@@ -142,105 +116,114 @@ export default function Alertas() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#0F172A", // Mantém o fundo azul escuro do seu menu espacial
+    backgroundColor: C.nebula,
   },
+
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 110, // Recuo grande para o título não sumir atrás do botão "☰" fixo
-    marginBottom: 20,
+    paddingHorizontal: S.md,
+    paddingTop: S.xxl + S.lg,
+    marginBottom: S.md,
+  },
+  eyebrow: {
+    color: C.moonDust,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1.6,
+    marginBottom: S.xs,
+    ...MONO,
   },
   title: {
-    color: "#FFF",
-    fontSize: 28,
-    fontWeight: "bold",
-    letterSpacing: 0.5,
+    color: C.starlight,
+    fontSize: 26,
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
   subtitle: {
-    color: "#94A3B8",
-    fontSize: 14,
+    color: C.moonDust,
+    fontSize: 13,
     marginTop: 4,
   },
-  filterContainer: {
+
+  filterRow: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    marginBottom: 15,
-    gap: 10,
+    paddingHorizontal: S.md,
+    marginBottom: S.md,
+    gap: S.sm,
   },
-  filterButton: {
-    paddingVertical: 8,
+  filterBtn: {
+    paddingVertical: 7,
     paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: "#1E293B",
+    borderRadius: R.pill,
+    backgroundColor: C.cosmos,
+    borderWidth: 0.5,
+    borderColor: C.borderMid,
   },
   filterText: {
-    color: "#94A3B8",
-    fontSize: 14,
+    color: C.moonDust,
+    fontSize: 12,
     fontWeight: "600",
+    letterSpacing: 0.4,
   },
-  filterActive: {
-    backgroundColor: "#38BDF8", // Azul brilhante estilo sci-fi
+
+  list: {
+    paddingHorizontal: S.md,
+    paddingBottom: S.xxl,
   },
-  filterActiveCritico: {
-    backgroundColor: "#EF4444",
-  },
-  filterActiveAviso: {
-    backgroundColor: "#F59E0B",
-  },
-  listContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
+
   card: {
-    backgroundColor: "#1E293B",
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    borderLeftWidth: 5, // A bordinha colorida que indica o perigo
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: C.darkMatter,
+    borderRadius: R.md,
+    borderWidth: 0.5,
+    borderColor: C.borderSubtle,
+    borderLeftWidth: 3,
+    padding: S.md,
+    marginBottom: S.sm,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: S.sm,
   },
   sistemaText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
+    color: C.starlight,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1,
+    ...MONO,
   },
-  timestampText: {
-    color: "#64748B",
-    fontSize: 12,
-    fontFamily: "monospace", // Estilo relógio de missão
+  timestamp: {
+    color: C.stardust,
+    fontSize: 10,
+    ...MONO,
   },
-  mensagemText: {
-    color: "#CBD5E1",
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 10,
+  mensagem: {
+    color: C.moonDust,
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: S.sm,
   },
   badge: {
     alignSelf: "flex-start",
-    paddingVertical: 4,
+    paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: 4,
+    borderRadius: R.sm,
+    borderWidth: 0.5,
   },
   badgeText: {
-    fontSize: 10,
-    fontWeight: "bold",
-    letterSpacing: 1,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+    ...MONO,
   },
-  emptyText: {
-    color: "#64748B",
+
+  empty: {
+    color: C.stardust,
     textAlign: "center",
-    marginTop: 40,
-    fontSize: 16,
+    marginTop: S.xxl,
+    fontSize: 14,
+    ...MONO,
   },
 });

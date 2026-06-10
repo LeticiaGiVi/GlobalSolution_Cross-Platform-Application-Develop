@@ -1,10 +1,9 @@
-// components/CardDashboard.tsx
-// Card de telemetria reutilizável.
-// Props definidas em interfaces/CardDados.ts
+
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { CardProps } from "../interfaces/CardDados";
+import { C, R, S, MONO } from "../styles/app.styles";
 
 export default function Card({
   title,
@@ -15,18 +14,27 @@ export default function Card({
 }: CardProps) {
   return (
     <View style={[styles.card, isAlert && styles.cardAlert]}>
+
       <Text style={styles.title}>{title.toUpperCase()}</Text>
 
-      <View style={styles.valueContainer}>
-        <Text style={[styles.value, isAlert && styles.valueAlert]}>{value}</Text>
-        {unit ? <Text style={styles.unit}>{unit}</Text> : null}
+
+      <View style={styles.valueRow}>
+        <Text style={[styles.value, isAlert && styles.valueAlert]}>
+          {value}
+        </Text>
+        {unit ? (
+          <Text style={[styles.unit, isAlert && styles.unitAlert]}>{unit}</Text>
+        ) : null}
       </View>
 
+
       {statusText ? (
-        <Text style={[styles.statusText, isAlert && styles.statusTextAlert]}>
-          {isAlert ? "Atenção " : "Sinal "}
-          {statusText}
-        </Text>
+        <View style={[styles.statusPill, isAlert && styles.statusPillAlert]}>
+          <Text style={[styles.statusText, isAlert && styles.statusTextAlert]}>
+            {isAlert ? "⚠ " : "● "}
+            {statusText}
+          </Text>
+        </View>
       ) : null}
     </View>
   );
@@ -34,51 +42,77 @@ export default function Card({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#000000",
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 6,
+    backgroundColor: C.darkMatter,
+    borderRadius: R.lg,
+    borderWidth: 0.5,
+    borderColor: C.cyanBorder,
+    padding: S.md,
     width: "48%",
-    borderWidth: 1,
-    borderColor: "#47d627",
+
+    borderTopWidth: 1.5,
+    borderTopColor: "rgba(0, 200, 240, 0.50)",
   },
   cardAlert: {
-    borderColor: "#EF4444",
-    backgroundColor: "#1A0B0B",
+    backgroundColor: "#100810",
+    borderColor: "rgba(255, 77, 106, 0.40)",
+    borderTopColor: C.danger,
   },
+
   title: {
-    color: "#f6f6f6",
-    fontSize: 11,
+    color: C.moonDust,
+    fontSize: 10,
     fontWeight: "700",
-    letterSpacing: 1,
-    marginBottom: 8,
+    letterSpacing: 1.4,
+    marginBottom: S.sm,
+    ...MONO,
   },
-  valueContainer: {
+
+  valueRow: {
     flexDirection: "row",
     alignItems: "baseline",
+    marginBottom: S.xs,
   },
+
   value: {
-    color: "#5cdd5c",
-    fontSize: 28,
-    fontWeight: "bold",
-    fontFamily: "monospace",
+    color: C.cyan,
+    fontSize: 30,
+    fontWeight: "700",
+    ...MONO,
   },
   valueAlert: {
-    color: "#EF4444",
+    color: C.danger,
   },
+
   unit: {
-    color: "#fdfdfd",
-    fontSize: 14,
+    color: C.moonDust,
+    fontSize: 13,
     marginLeft: 4,
-    fontFamily: "monospace",
+    ...MONO,
   },
+  unitAlert: {
+    color: "rgba(255,77,106,0.7)",
+  },
+
+  statusPill: {
+    alignSelf: "flex-start",
+    backgroundColor: C.cyanGlow,
+    borderRadius: R.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: S.xs,
+  },
+  statusPillAlert: {
+    backgroundColor: C.dangerGlow,
+  },
+
   statusText: {
-    color: "#3ed738",
-    fontSize: 12,
-    marginTop: 8,
-    fontFamily: "monospace",
+    color: C.cyan,
+    fontSize: 10,
+    fontWeight: "600",
+    letterSpacing: 0.6,
+    ...MONO,
   },
   statusTextAlert: {
-    color: "#d33535",
+    color: C.danger,
   },
 });
